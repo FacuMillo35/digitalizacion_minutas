@@ -5,7 +5,7 @@ def obtener_conexion():
         db = mysql.connector.connect(
             host="localhost",
             user="root",          # Tu usuario de MySQL Workbench
-            password="admin123", # Pon aquí tu contraseña
+            password="admin", # Pon aquí tu contraseña de MySQL Workbench
             database="proyecto_final_bd" # El nombre que le diste en Workbench
         )
         return db
