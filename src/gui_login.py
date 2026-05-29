@@ -1,7 +1,8 @@
 import sys
 import mysql.connector
 from PyQt6 import uic
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QApplication, QMessageBox
+from gui_principal import MainWindow
 
 class LoginWindow(QMainWindow):
     def __init__(self):
@@ -20,9 +21,9 @@ class LoginWindow(QMainWindow):
         try:
             conexion = mysql.connector.connect(
                 host="localhost",
-                user="root",           # Tu usuario de MySQL
-                password="admin123",  # Tu contraseña de MySQL
-                database="proyecto_final_bd" # El nombre de tu esquema
+                user="root",           
+                password="admin123",  
+                database="proyecto_final_bd" 
             )
             return conexion
         except mysql.connector.Error as err:
@@ -51,9 +52,14 @@ class LoginWindow(QMainWindow):
 
                 if resultado:
                     rol = resultado['rol']
-                    QMessageBox.information(self, "Éxito", f"Bienvenido {usuario_txt}\nRol: {rol}")
-                    # AQUÍ: Más adelante llamaremos a la ventana principal
-                    # self.abrir_ventana_principal()
+                    # 1. Creamos la ventana principal pasándole los datos que trajo MySQL
+                    self.ventana_home = MainWindow(resultado)
+                    
+                    # 2. Mostramos la pantalla principal en el monitor
+                    self.ventana_home.show()
+                    
+                    # 3. Cerramos la ventana de login actual para que no quede abierta de fondo
+                    self.close()
                 else:
                     QMessageBox.warning(self, "Acceso Denegado", "Usuario o contraseña incorrectos.")
             
