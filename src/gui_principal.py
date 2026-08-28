@@ -84,6 +84,15 @@ class MainWindow(QMainWindow):
         # --- NUEVO: Conectamos el combo de estado civil ---
         self.cmb_estado_civil.currentTextChanged.connect(self.alternar_conyuge)
         self.alternar_conyuge(self.cmb_estado_civil.currentText()) # Estado inicial
+        # --- NUEVO: Conectamos el combo de tipo de acto al monto ---
+        self.cmb_tipo_acto.currentTextChanged.connect(self.alternar_monto)
+        self.alternar_monto(self.cmb_tipo_acto.currentText())
+    def alternar_monto(self, texto):
+        if "Donación" in texto:
+            self.txt_monto.clear()
+            self.txt_monto.setEnabled(False)
+        else:
+            self.txt_monto.setEnabled(True)
     def abrir_ventana_ph(self):
         # Usamos exec() para que sea modal (no deje clickear atrás hasta que se cierre)
         self.ventana_secundaria_ph.exec()
@@ -150,16 +159,24 @@ class MainWindow(QMainWindow):
         monto = self.txt_monto.text().strip()
         observaciones = self.txt_observaciones.toPlainText().strip()
         id_inmueble = self.cmb_inmueble.currentData()
+        tipo_acto = self.cmb_tipo_acto.currentText().strip()
         id_usuario = 1  # ID por defecto para el escribano
 
         # Recuperamos las IDs de las personas
         vendedores_seleccionados = [self.list_vendedores.item(i).data(32) for i in range(self.list_vendedores.count()) if self.list_vendedores.item(i).isSelected()]
         compradores_seleccionados = [self.list_compradores.item(i).data(32) for i in range(self.list_compradores.count()) if self.list_compradores.item(i).isSelected()]
 
-        if not monto or not id_inmueble or not vendedores_seleccionados or not compradores_seleccionados:
-            print("Error: Falta completar el monto, inmueble o intervinientes.")
+        if not id_inmueble or not vendedores_seleccionados or not compradores_seleccionados:
+            print("Error: Falta completar inmueble o intervinientes.")
+            return
+            
+        if "Donación" not in tipo_acto and not monto:
+            print("Error: Falta completar el monto para este tipo de acto.")
             return
 
+        # Si es donación y el monto quedó vacío, le asignamos un "0" para la base de datos
+        if not monto:
+            monto = "0"
         conexion = None
         try:
             conexion = mysql.connector.connect(
@@ -172,10 +189,10 @@ class MainWindow(QMainWindow):
             
             query_minuta = """
                 INSERT INTO minuta_c_inmueble 
-                (id_inmueble, id_usuario_escribano, id_usuario, motivo, observaciones) 
-                VALUES (%s, %s, %s, %s, %s)
+                (id_inmueble, id_usuario_escribano, id_usuario, motivo, observaciones, tipo_acto) 
+                VALUES (%s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(query_minuta, (id_inmueble, id_usuario, id_usuario, texto_motivo, observaciones))
+            cursor.execute(query_minuta, (id_inmueble, id_usuario, id_usuario, texto_motivo, observaciones, tipo_acto))
             id_minuta_generada = cursor.lastrowid
             
             query_intermedia = "INSERT INTO intervinientes_minuta (id_minuta, id_persona, rol) VALUES (%s, %s, %s)"
@@ -228,7 +245,7 @@ class MainWindow(QMainWindow):
             # Llamamos a la nueva función oficial pasándole todos los diccionarios
             self.generar_pdf_minuta_oficial(
                 id_minuta_generada, monto, fecha_hoy, observaciones, 
-                datos_inmueble, datos_vendedores, datos_compradores
+                datos_inmueble, datos_vendedores, datos_compradores, tipo_acto
             )
             
             # --- 4. LIMPIEZA DE LA INTERFAZ ---
@@ -245,7 +262,7 @@ class MainWindow(QMainWindow):
                 if 'cursor_dict' in locals():
                     cursor_dict.close()
                 conexion.close()
-    def generar_pdf_minuta_oficial(self, id_minuta, monto, fecha_impresion, observaciones, inmueble, vendedores, compradores):
+    def generar_pdf_minuta_oficial(self, id_minuta, monto, fecha_impresion, observaciones, inmueble, vendedores, compradores, tipo_acto):
         """Genera el PDF emulando los casilleros de la Minuta C real de La Rioja"""
         try:
             from reportlab.lib.pagesizes import legal
@@ -268,23 +285,23 @@ class MainWindow(QMainWindow):
             story.append(Paragraph("<b>DIRECCIÓN GENERAL DE REGISTRO DE LA PROPIEDAD INMUEBLE</b><br/>La Rioja - República Argentina", st_titulo))
             story.append(Paragraph(f"<b>Minuta 'C' N° {id_minuta}</b> - Solicitud de Inscripción de dominio o anotaciones", ParagraphStyle('Sub', alignment=1, fontSize=10)))
             story.append(Spacer(1, 10))
-
+            # Lógica para mostrar u ocultar el monto según el tipo de acto
+            if "Donación" in tipo_acto:
+                texto_monto_pdf = "NO CORRESPONDE"
+            else:
+                texto_monto_pdf = f"${monto}"
             estilo_grilla = TableStyle([
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
                 ('VALIGN', (0,0), (-1,-1), 'TOP'),
                 ('PADDING', (0,0), (-1,-1), 4),
             ])
 
-            # --- 1. NOMENCLATURA Y 2. ACTO ---
+          # --- 1. NOMENCLATURA Y 2. ACTO ---
             nomenclatura = inmueble.get('nomenclatura') or 'S/D'
             datos_sec_1_2 = [
                 [Paragraph("<b>1 - Nomenclatura Catastral</b>", st_box_title), Paragraph("<b>2 - ESPECIE DE LOS DERECHOS O ACTOS</b>", st_box_title)],
-                [Paragraph(f"{nomenclatura}", st_box_text), Paragraph(f"COMPRAVENTA<br/>Monto: ${monto}", st_box_text)]
+                [Paragraph(f"{nomenclatura}", st_box_text), Paragraph(f"{tipo_acto.upper()}<br/>Monto: {texto_monto_pdf}", st_box_text)]
             ]
-            t1 = Table(datos_sec_1_2, colWidths=[270, 270])
-            t1.setStyle(estilo_grilla)
-            story.append(t1)
-            story.append(Spacer(1, 5))
 
             # --- 3. INMUEBLE Y 4. PH ---
             domicilio_inm = inmueble.get('domicilio') or 'S/D'
@@ -358,13 +375,9 @@ class MainWindow(QMainWindow):
             # --- 8 AL 14. OTORGAMIENTO Y OBSERVACIONES ---
             datos_finales = [
                 [Paragraph("<b>8 - MONTO / 10 - OTORGAMIENTO</b>", st_box_title), Paragraph("<b>OBSERVACIONES ADICIONALES</b>", st_box_title)],
-                [Paragraph(f"Precio o Valuación: ${monto}<br/>Fecha de Emisión: {fecha_impresion}<br/>Escribano Autorizante: Registro N° 1", st_box_text), 
+                [Paragraph(f"Precio o Valuación: {texto_monto_pdf}<br/>Fecha de Emisión: {fecha_impresion}<br/>Escribano Autorizante: Registro N° 1", st_box_text), 
                  Paragraph(observaciones if observaciones else "Sin observaciones.", st_box_text)]
             ]
-            t_final = Table(datos_finales, colWidths=[270, 270])
-            t_final.setStyle(estilo_grilla)
-            story.append(t_final)
-            story.append(Spacer(1, 30))
 
             # --- FIRMAS ---
             datos_firmas = [["", ""], [Paragraph("__________________________<br/>FIRMA Y SELLO ESCRIBANO", ParagraphStyle('C', alignment=1, fontSize=8)), 
