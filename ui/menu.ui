@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>592</height>
+    <width>1039</width>
+    <height>688</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -205,6 +205,35 @@ QPushButton:hover {
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="btn_configuracion">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>-1</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+           <string>CONFIGURACION</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="btn_cerrar">
           <property name="minimumSize">
            <size>
@@ -243,7 +272,7 @@ QPushButton:hover {
        <string notr="true">background-color: rgb(114, 190, 250);</string>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="INICIO"/>
       <widget class="QWidget" name="CLIENTES">
@@ -253,7 +282,7 @@ QPushButton:hover {
           <x>110</x>
           <y>100</y>
           <width>490</width>
-          <height>389</height>
+          <height>395</height>
          </rect>
         </property>
         <layout class="QFormLayout" name="formLayout">
@@ -586,13 +615,56 @@ color: rgb(255, 255, 255);</string>
        <widget class="QWidget" name="formLayoutWidget">
         <property name="geometry">
          <rect>
-          <x>140</x>
-          <y>80</y>
-          <width>393</width>
-          <height>394</height>
+          <x>170</x>
+          <y>20</y>
+          <width>499</width>
+          <height>512</height>
          </rect>
         </property>
         <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_14">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Tipo de Propiedad</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cmb_tipo_propiedad">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Propiedad</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Propiedad Horizontal</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="btn_datos_ph">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="text">
+            <string>Cargar Datos PH</string>
+           </property>
+          </widget>
+         </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_11">
            <property name="font">
@@ -626,14 +698,6 @@ background-color: rgb(255, 255, 255);</string>
            </property>
            <property name="text">
             <string>Nomenclatura Catastral</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="txt_nomenclatura">
-           <property name="styleSheet">
-            <string notr="true">color: rgb(0, 0, 0);
-background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
@@ -679,9 +743,45 @@ background-color: rgb(255, 255, 255);</string>
             <string notr="true">color: rgb(0, 0, 0);
 background-color: rgb(255, 255, 255);</string>
            </property>
+           <property name="placeholderText">
+            <string>Domicilio</string>
+           </property>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="txt_inmueble_entre_calles">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string>Entre Calles</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="txt_inmueble_lote">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string>Lote</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="txt_inmueble_manzana">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string>Manzana</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
           <widget class="QLabel" name="label_17">
            <property name="font">
             <font>
@@ -695,7 +795,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item row="9" column="1">
           <widget class="QLineEdit" name="txt_depto">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -703,7 +803,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="10" column="0">
           <widget class="QLabel" name="label_18">
            <property name="font">
             <font>
@@ -717,7 +817,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
+         <item row="10" column="1">
           <widget class="QLineEdit" name="txt_localidad_inm">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -725,7 +825,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="11" column="0">
           <widget class="QLabel" name="label_19">
            <property name="font">
             <font>
@@ -739,7 +839,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
+         <item row="11" column="1">
           <widget class="QLineEdit" name="txt_registro">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -747,7 +847,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="0">
+         <item row="13" column="0">
           <widget class="QLabel" name="label_20">
            <property name="font">
             <font>
@@ -761,7 +861,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
+         <item row="13" column="1">
           <widget class="QLineEdit" name="txt_folio_real">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -769,7 +869,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="11" column="0">
+         <item row="14" column="0">
           <widget class="QLabel" name="label_21">
            <property name="font">
             <font>
@@ -783,7 +883,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="11" column="1">
+         <item row="14" column="1">
           <widget class="QLineEdit" name="txt_tomo_numero">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -791,7 +891,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="12" column="0">
+         <item row="15" column="0">
           <widget class="QLabel" name="label_22">
            <property name="font">
             <font>
@@ -805,7 +905,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="12" column="1">
+         <item row="15" column="1">
           <widget class="QLineEdit" name="txt_anio">
            <property name="styleSheet">
             <string notr="true">color: rgb(0, 0, 0);
@@ -813,7 +913,7 @@ background-color: rgb(255, 255, 255);</string>
            </property>
           </widget>
          </item>
-         <item row="13" column="1">
+         <item row="16" column="1">
           <widget class="QPushButton" name="btn_guardar_inmueble">
            <property name="font">
             <font>
@@ -831,48 +931,53 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="cmb_tipo_propiedad">
-           <property name="styleSheet">
-            <string notr="true">background-color: rgb(255, 255, 255);
+         <item row="3" column="1">
+          <layout class="QGridLayout" name="nomenclatura">
+           <item row="0" column="3">
+            <widget class="QLineEdit" name="txt_nom_parcela">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);
 color: rgb(0, 0, 0);</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>Propiedad Vertical</string>
-            </property>
+             </property>
+             <property name="placeholderText">
+              <string>P</string>
+             </property>
+            </widget>
            </item>
-           <item>
-            <property name="text">
-             <string>Propiedad Horizontal</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_14">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Tipo de Propiedad</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="btn_datos_ph">
-           <property name="styleSheet">
-            <string notr="true">background-color: rgb(255, 255, 255);
+           <item row="0" column="2">
+            <widget class="QLineEdit" name="txt_nom_manzana">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);
 color: rgb(0, 0, 0);</string>
-           </property>
-           <property name="text">
-            <string>Cargar Datos PH</string>
-           </property>
-          </widget>
+             </property>
+             <property name="placeholderText">
+              <string>Mz</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLineEdit" name="txt_nom_circunscripcion">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="placeholderText">
+              <string>C</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="txt_nom_seccion">
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="placeholderText">
+              <string>S</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>
@@ -884,11 +989,11 @@ color: rgb(0, 0, 0);</string>
           <x>120</x>
           <y>60</y>
           <width>411</width>
-          <height>432</height>
+          <height>497</height>
          </rect>
         </property>
         <layout class="QFormLayout" name="formLayout_3">
-         <item row="0" column="0">
+         <item row="1" column="0">
           <widget class="QLabel" name="label_24">
            <property name="font">
             <font>
@@ -902,7 +1007,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="1">
           <widget class="QComboBox" name="cmb_inmueble">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);
@@ -910,7 +1015,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="3" column="0">
           <widget class="QLabel" name="label_25">
            <property name="font">
             <font>
@@ -924,7 +1029,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="3" column="1">
           <widget class="QLineEdit" name="txt_monto">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);
@@ -932,7 +1037,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="label_27">
            <property name="font">
             <font>
@@ -946,7 +1051,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="5" column="1">
           <widget class="QTextEdit" name="txt_observaciones">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);
@@ -954,7 +1059,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="7" column="0">
           <widget class="QLabel" name="label_28">
            <property name="font">
             <font>
@@ -968,7 +1073,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="7" column="1">
           <widget class="QListWidget" name="list_vendedores">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);
@@ -976,7 +1081,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="9" column="0">
           <widget class="QLabel" name="label_29">
            <property name="font">
             <font>
@@ -990,7 +1095,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
+         <item row="9" column="1">
           <widget class="QListWidget" name="list_compradores">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);
@@ -998,7 +1103,7 @@ color: rgb(0, 0, 0);</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item row="10" column="1">
           <widget class="QPushButton" name="btn_guardar_minuta">
            <property name="styleSheet">
             <string notr="true">background-color: rgb(162, 162, 162);</string>
@@ -1006,34 +1111,6 @@ color: rgb(0, 0, 0);</string>
            <property name="text">
             <string>Guardar</string>
            </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="cmb_tipo_acto">
-           <property name="styleSheet">
-            <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>Compraventa</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Donacion</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Sesion de Derechos</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Hipoteca</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item row="2" column="0">
@@ -1046,7 +1123,138 @@ color: rgb(0, 0, 0);</string>
             </font>
            </property>
            <property name="text">
-            <string>Tipo de Acto</string>
+            <string>Especie de Derechos</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="txt_especie_derechos">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="txt_buscar_vendedor">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string notr="true">Ingrese DNI</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="txt_buscar_comprador">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string>Ingrese DNI</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="txt_buscar_inmueble">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="placeholderText">
+            <string>Ingrese Nomenclatura</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="Perfil">
+       <widget class="QWidget" name="gridLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>10</y>
+          <width>671</width>
+          <height>551</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="txt_perfil_registro">
+           <property name="styleSheet">
+            <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(255, 255, 255);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="txt_perfil_nombre">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="txt_perfil_matricula">
+           <property name="styleSheet">
+            <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(255, 255, 255);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_32">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Numero de Registro (opcional)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_31">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Numero de Matricula</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_30">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Nombre y Apellido</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="btn_guardar_perfil">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(179, 179, 179);</string>
+           </property>
+           <property name="text">
+            <string>GUARDAR</string>
            </property>
           </widget>
          </item>

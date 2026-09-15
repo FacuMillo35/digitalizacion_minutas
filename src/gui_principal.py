@@ -4,6 +4,8 @@ import mysql.connector
 from PyQt6 import uic
 from PyQt6.QtCore import QDate
 from PyQt6.QtWidgets import QMainWindow, QApplication, QDialog
+
+
 # --- NUEVA CLASE PARA LA VENTANA PH ---
 class VentanaPH(QDialog):
     def __init__(self, parent=None):
@@ -40,6 +42,44 @@ class VentanaPH(QDialog):
         self.txt_ph_porcentaje.clear()
         self.datos_temporales = {"unidad": None, "poligono": None, "porcentaje": None}
 class MainWindow(QMainWindow):
+    def guardar_perfil(self):
+        nombre = self.txt_perfil_nombre.text().strip()
+        matricula = self.txt_perfil_matricula.text().strip()
+        registro = self.txt_perfil_registro.text().strip()
+        
+        try:
+            conexion = mysql.connector.connect(host="localhost", user="root", password="admin123", database="proyecto_final_bd")
+            cursor = conexion.cursor()
+            
+            # Actualizamos siempre la fila 1
+            query = "UPDATE perfil_escribano SET nombre_completo=%s, matricula=%s, numero_registro=%s WHERE id=1"
+            cursor.execute(query, (nombre, matricula, registro))
+            conexion.commit()
+            print("¡Perfil del escribano actualizado con éxito!")
+            
+        except mysql.connector.Error as error:
+            print(f"Error al guardar el perfil: {error}")
+        finally:
+            if 'conexion' in locals() and conexion.is_connected():
+                cursor.close(); conexion.close()
+
+    def cargar_perfil(self):
+        try:
+            conexion = mysql.connector.connect(host="localhost", user="root", password="admin123", database="proyecto_final_bd")
+            cursor = conexion.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM perfil_escribano WHERE id=1")
+            perfil = cursor.fetchone()
+            
+            if perfil:
+                self.txt_perfil_nombre.setText(perfil['nombre_completo'])
+                self.txt_perfil_matricula.setText(perfil['matricula'])
+                self.txt_perfil_registro.setText(perfil.get('numero_registro') or "")
+                
+        except mysql.connector.Error as error:
+            print(f"Error al cargar el perfil: {error}")
+        finally:
+            if 'conexion' in locals() and conexion.is_connected():
+                cursor.close(); conexion.close()
     def __init__(self, datos_usuario):
         super().__init__()
         
@@ -70,6 +110,8 @@ class MainWindow(QMainWindow):
         self.btn_clientes.clicked.connect(lambda: self.contenedor_paginas.setCurrentIndex(1))
         self.btn_inmuebles.clicked.connect(lambda: self.contenedor_paginas.setCurrentIndex(2))
         self.btn_minutas.clicked.connect(lambda: self.contenedor_paginas.setCurrentIndex(3))
+        self.btn_configuracion.clicked.connect(lambda: self.contenedor_paginas.setCurrentIndex(4))
+
         
         # --- CONEXIONES DE BOTONES DE GUARDADO ---
         self.btn_guardar_cliente.clicked.connect(self.guardar_cliente)
@@ -77,6 +119,10 @@ class MainWindow(QMainWindow):
         self.btn_guardar_minuta.clicked.connect(self.guardar_minuta)
         # --- NUEVO: Conectamos el botón para abrir la ventanita PH ---
         self.btn_datos_ph.clicked.connect(self.abrir_ventana_ph)
+        # Conectar botón de guardado
+        self.btn_guardar_perfil.clicked.connect(self.guardar_perfil)
+        # Cargar los datos ni bien arranca la app
+        self.cargar_perfil()
         # --- NUEVO: Conectamos el combo para habilitar/deshabilitar el botón PH ---
         self.cmb_tipo_propiedad.currentTextChanged.connect(self.alternar_boton_ph)
         # Lo llamamos una vez al inicio para que el botón arranque bloqueado si dice "Vertical"
@@ -84,9 +130,12 @@ class MainWindow(QMainWindow):
         # --- NUEVO: Conectamos el combo de estado civil ---
         self.cmb_estado_civil.currentTextChanged.connect(self.alternar_conyuge)
         self.alternar_conyuge(self.cmb_estado_civil.currentText()) # Estado inicial
-        # --- NUEVO: Conectamos el combo de tipo de acto al monto ---
-        self.cmb_tipo_acto.currentTextChanged.connect(self.alternar_monto)
-        self.alternar_monto(self.cmb_tipo_acto.currentText())
+        # --- Buscadores en tiempo real ---
+        self.txt_buscar_vendedor.textChanged.connect(self.filtrar_vendedores)
+        self.txt_buscar_comprador.textChanged.connect(self.filtrar_compradores)
+        # Conexión del buscador de inmuebles (esto ya lo tenías)
+        self.txt_buscar_inmueble.textChanged.connect(self.filtrar_inmuebles)
+
     def alternar_monto(self, texto):
         if "Donación" in texto:
             self.txt_monto.clear()
@@ -134,19 +183,28 @@ class MainWindow(QMainWindow):
             self.list_vendedores.setSelectionMode(self.list_vendedores.SelectionMode.MultiSelection)
             self.list_compradores.setSelectionMode(self.list_compradores.SelectionMode.MultiSelection)
 
-           # 2. Poblar Combo de Inmuebles (CAMBIO: Ahora usa Nomenclatura Catastral)
-            cursor.execute("SELECT id_inmueble, nomenclatura_catastral, domicilio_inmueble FROM inmuebles")
+           # 2. Poblar Combo de Inmuebles (CAMBIO: Ahora usa las 4 columnas nuevas)
+            cursor.execute("""
+             SELECT id_inmueble, 
+                   nom_circunscripcion, nom_seccion, nom_manzana, nom_parcela, 
+                   domicilio_inmueble 
+                FROM inmuebles
+                """)
             inmuebles = cursor.fetchall()
-            
+        
             self.cmb_inmueble.clear()
-            for inm in inmuebles:
-                id_i, nomenclatura, dom = inm
-                
-                # Armamos el texto. Si no tiene domicilio (es None), no lo mostramos
-                texto_domicilio = f" - {dom}" if dom else ""
-                texto_nomenclatura = nomenclatura if nomenclatura else "Sin Nomenclatura"
-                
-                self.cmb_inmueble.addItem(f"Nomenclatura: {texto_nomenclatura}{texto_domicilio}", id_i)
+        
+            for fila in inmuebles:
+                id_inm = fila[0]
+                circ = fila[1] or "-"
+                sec = fila[2] or "-"
+                manz = fila[3] or "-"
+                parc = fila[4] or "-"
+                dom = fila[5] or "S/D"
+            
+                texto_combo = f"Nom: C:{circ} S:{sec} Mz:{manz} P:{parc} | {dom}"
+            
+                self.cmb_inmueble.addItem(texto_combo, id_inm)
                 
             print("🔄 Listas de Minutas sincronizadas con las tablas reales.")
         except mysql.connector.Error as error:
@@ -159,24 +217,31 @@ class MainWindow(QMainWindow):
         monto = self.txt_monto.text().strip()
         observaciones = self.txt_observaciones.toPlainText().strip()
         id_inmueble = self.cmb_inmueble.currentData()
-        tipo_acto = self.cmb_tipo_acto.currentText().strip()
+        tipo_acto = self.txt_especie_derechos.text().strip()
         id_usuario = 1  # ID por defecto para el escribano
 
         # Recuperamos las IDs de las personas
-        vendedores_seleccionados = [self.list_vendedores.item(i).data(32) for i in range(self.list_vendedores.count()) if self.list_vendedores.item(i).isSelected()]
-        compradores_seleccionados = [self.list_compradores.item(i).data(32) for i in range(self.list_compradores.count()) if self.list_compradores.item(i).isSelected()]
+        vendedores_seleccionados = [
+            self.list_vendedores.item(i).data(32)
+            for i in range(self.list_vendedores.count())
+            if self.list_vendedores.item(i).isSelected()
+        ]
+        compradores_seleccionados = [
+            self.list_compradores.item(i).data(32)
+            for i in range(self.list_compradores.count())
+            if self.list_compradores.item(i).isSelected()
+        ]
 
+        # --- VALIDACIONES ---
+        # 1. Inmueble e Intervinientes (Obligatorio siempre)
         if not id_inmueble or not vendedores_seleccionados or not compradores_seleccionados:
             print("Error: Falta completar inmueble o intervinientes.")
             return
-            
-        if "Donación" not in tipo_acto and not monto:
-            print("Error: Falta completar el monto para este tipo de acto.")
-            return
 
-        # Si es donación y el monto quedó vacío, le asignamos un "0" para la base de datos
+        # 2. Asignación automática: si es donación y está vacío, le mandamos "NO CORRESPONDE" a la BD
         if not monto:
             monto = "0"
+
         conexion = None
         try:
             conexion = mysql.connector.connect(
@@ -209,20 +274,26 @@ class MainWindow(QMainWindow):
             # Usamos un cursor de diccionario para facilitar el paso de datos al PDF
             cursor_dict = conexion.cursor(dictionary=True)
             
-            # Traer los datos completos del inmueble
+           # Traer los datos completos del inmueble
             cursor_dict.execute("""
-                SELECT nomenclatura_catastral as nomenclatura, 
-                       domicilio_inmueble as domicilio, 
-                       superficie, 
-                       tipo_propiedad, 
-                       ph_unidad_funcional as ph_unidad, 
-                       ph_poligono, 
-                       ph_porcentaje, 
-                       tomo_numero, 
-                       folio_real, 
-                       anio_inscripcion 
-                FROM inmuebles WHERE id_inmueble = %s
-            """, (id_inmueble,))
+            SELECT domicilio_inmueble as domicilio,
+                   entre_calles,
+                   lote,
+                   manzana,
+                   superficie,
+                   tipo_propiedad,
+                   ph_unidad_funcional as ph_unidad,
+                   ph_poligono,
+                   ph_porcentaje,
+                   tomo_numero,
+                   folio_real,
+                   anio_inscripcion,
+                   nom_circunscripcion,
+                   nom_seccion,
+                   nom_manzana,
+                   nom_parcela
+            FROM inmuebles WHERE id_inmueble = %s
+        """, (id_inmueble,))
             datos_inmueble = cursor_dict.fetchone()
 
             # Traer los datos completos de los vendedores
@@ -242,10 +313,14 @@ class MainWindow(QMainWindow):
             from datetime import date
             fecha_hoy = date.today().strftime("%d/%m/%Y")
             
-            # Llamamos a la nueva función oficial pasándole todos los diccionarios
+            # --- NUEVO: Traer datos del escribano ---
+            cursor_dict.execute("SELECT * FROM perfil_escribano WHERE id=1")
+            datos_escribano = cursor_dict.fetchone()
+
+            # Llamamos a la nueva función oficial (AGREGAMOS datos_escribano AL FINAL)
             self.generar_pdf_minuta_oficial(
                 id_minuta_generada, monto, fecha_hoy, observaciones, 
-                datos_inmueble, datos_vendedores, datos_compradores, tipo_acto
+                datos_inmueble, datos_vendedores, datos_compradores, tipo_acto, datos_escribano
             )
             
             # --- 4. LIMPIEZA DE LA INTERFAZ ---
@@ -262,13 +337,15 @@ class MainWindow(QMainWindow):
                 if 'cursor_dict' in locals():
                     cursor_dict.close()
                 conexion.close()
-    def generar_pdf_minuta_oficial(self, id_minuta, monto, fecha_impresion, observaciones, inmueble, vendedores, compradores, tipo_acto):
+    def generar_pdf_minuta_oficial(self, id_minuta, monto, fecha_impresion, observaciones, inmueble, vendedores, compradores, tipo_acto, datos_escribano):
         """Genera el PDF emulando los casilleros de la Minuta C real de La Rioja"""
+    
         try:
             from reportlab.lib.pagesizes import legal
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib import colors
+            import os
 
             os.makedirs("pdf_minutas", exist_ok=True)
             nombre_archivo = f"pdf_minutas/minuta_c_{id_minuta}.pdf"
@@ -281,45 +358,75 @@ class MainWindow(QMainWindow):
             st_box_title = ParagraphStyle('BoxTitle', fontSize=8, fontName='Helvetica-Bold', textColor=colors.black)
             st_box_text = ParagraphStyle('BoxText', fontSize=9, fontName='Helvetica', leading=12)
 
+           # --- Lógica del Monto ---
+            # Si el escribano lo dejó vacío o el sistema le asignó "0", ponemos "NO CORRESPONDE"
+            if monto == "0" or not monto:
+                texto_monto_pdf = "NO CORRESPONDE"
+            else:
+                texto_monto_pdf = f"${monto}"
+
             # --- ENCABEZADO ---
             story.append(Paragraph("<b>DIRECCIÓN GENERAL DE REGISTRO DE LA PROPIEDAD INMUEBLE</b><br/>La Rioja - República Argentina", st_titulo))
             story.append(Paragraph(f"<b>Minuta 'C' N° {id_minuta}</b> - Solicitud de Inscripción de dominio o anotaciones", ParagraphStyle('Sub', alignment=1, fontSize=10)))
             story.append(Spacer(1, 10))
-            # Lógica para mostrar u ocultar el monto según el tipo de acto
-            if "Donación" in tipo_acto:
-                texto_monto_pdf = "NO CORRESPONDE"
-            else:
-                texto_monto_pdf = f"${monto}"
+
             estilo_grilla = TableStyle([
                 ('GRID', (0,0), (-1,-1), 1, colors.black),
                 ('VALIGN', (0,0), (-1,-1), 'TOP'),
                 ('PADDING', (0,0), (-1,-1), 4),
             ])
 
-          # --- 1. NOMENCLATURA Y 2. ACTO ---
-            nomenclatura = inmueble.get('nomenclatura') or 'S/D'
+           # --- 1. NOMENCLATURA Y 2. ACTO ---
+            n_circ = inmueble.get('nom_circunscripcion') or '-'
+            n_sec = inmueble.get('nom_seccion') or '-'
+            n_manz = inmueble.get('nom_manzana') or '-'
+            n_parc = inmueble.get('nom_parcela') or '-'
+            
+            texto_nomenclatura = f"Circunscripción: {n_circ} &nbsp;&nbsp;|&nbsp;&nbsp; Sección: {n_sec}<br/>Manzana: {n_manz} &nbsp;&nbsp;|&nbsp;&nbsp; Parcela: {n_parc}"
+            
             datos_sec_1_2 = [
                 [Paragraph("<b>1 - Nomenclatura Catastral</b>", st_box_title), Paragraph("<b>2 - ESPECIE DE LOS DERECHOS O ACTOS</b>", st_box_title)],
-                [Paragraph(f"{nomenclatura}", st_box_text), Paragraph(f"{tipo_acto.upper()}<br/>Monto: {texto_monto_pdf}", st_box_text)]
+                [Paragraph(texto_nomenclatura, st_box_text), Paragraph(f"{tipo_acto.upper()}<br/>Monto: {texto_monto_pdf}", st_box_text)]
             ]
-
-            # --- 3. INMUEBLE Y 4. PH ---
+            t1 = Table(datos_sec_1_2, colWidths=[270, 270])
+            t1.setStyle(estilo_grilla)
+            story.append(t1)
+            story.append(Spacer(1, 5))
+        # --- 3. INMUEBLE Y 4. PH ---
             domicilio_inm = inmueble.get('domicilio') or 'S/D'
+            entre_c = inmueble.get('entre_calles')
+            lote_inm = inmueble.get('lote')
+            manz_inm = inmueble.get('manzana')
+            
+            # Armamos el texto de ubicación concatenando los datos que existan
+            texto_ubicacion = f"{domicilio_inm}"
+            if entre_c:
+                texto_ubicacion += f" (entre {entre_c})"
+            if manz_inm:
+                texto_ubicacion += f" - Mz: {manz_inm}"
+            if lote_inm:
+                texto_ubicacion += f" - Lote: {lote_inm}"
+
+            # Si también querés sumar Localidad y Departamento que tenés en la interfaz:
+            localidad = inmueble.get('localidad')
+            dpto = inmueble.get('departamento')
+            if localidad and dpto:
+                texto_ubicacion += f"<br/>Localidad: {localidad} - Dpto: {dpto}"
+
             superficie_inm = inmueble.get('superficie') or 'S/D'
             
-            # CORRECCIÓN: Buscamos la palabra "Horizontal" sin importar mayúsculas o espacios extra
             tipo_prop = inmueble.get('tipo_propiedad') or ''
-            if "Horizontal" in tipo_prop:
+            if "horizontal" in tipo_prop.lower():
                 uni = inmueble.get('ph_unidad') or 'S/D'
                 pol = inmueble.get('ph_poligono') or 'S/D'
                 porc = inmueble.get('ph_porcentaje') or '0'
                 texto_ph = f"Unidad Funcional: {uni}<br/>Polígono: {pol}<br/>Porcentaje: {porc}%"
             else:
-                texto_ph = "NO CORRESPONDE (Propiedad Vertical)"
+                texto_ph = "NO CORRESPONDE"
 
             datos_sec_3_4 = [
                 [Paragraph("<b>3 - INMUEBLE: Ubicación y Superficie</b>", st_box_title), Paragraph("<b>4 - PROPIEDAD HORIZONTAL</b>", st_box_title)],
-                [Paragraph(f"Ubicación: {domicilio_inm}<br/>Superficie: {superficie_inm}", st_box_text), Paragraph(texto_ph, st_box_text)]
+                [Paragraph(f"Ubicación: {texto_ubicacion}<br/>Superficie: {superficie_inm}", st_box_text), Paragraph(texto_ph, st_box_text)]
             ]
             t2 = Table(datos_sec_3_4, colWidths=[270, 270])
             t2.setStyle(estilo_grilla)
@@ -346,8 +453,6 @@ class MainWindow(QMainWindow):
                 dom_c = comp.get('domicilio') or 'S/D'
                 est_civil_c = comp.get('estado_civil') or 'S/D'
                 conyuge_c = comp.get('nombre_conyuge')
-                
-                # Armamos el texto extra si está casado
                 texto_conyuge_c = f" - <b>Cónyuge:</b> {conyuge_c}" if conyuge_c else ""
                 
                 texto_comp = f"<b>Nombre y Apellido:</b> {comp.get('nombre')} {comp.get('apellido')} - <b>DNI:</b> {comp.get('dni')}<br/><b>Estado Civil:</b> {est_civil_c}{texto_conyuge_c}<br/><b>Domicilio:</b> {dom_c}"
@@ -362,8 +467,6 @@ class MainWindow(QMainWindow):
                 dom_v = vend.get('domicilio') or 'S/D'
                 est_civil_v = vend.get('estado_civil') or 'S/D'
                 conyuge_v = vend.get('nombre_conyuge')
-                
-                # Armamos el texto extra si está casado
                 texto_conyuge_v = f" - <b>Cónyuge:</b> {conyuge_v}" if conyuge_v else ""
                 
                 texto_vend = f"<b>Nombre y Apellido:</b> {vend.get('nombre')} {vend.get('apellido')} - <b>DNI:</b> {vend.get('dni')}<br/><b>Estado Civil:</b> {est_civil_v}{texto_conyuge_v}<br/><b>Domicilio:</b> {dom_v}"
@@ -372,16 +475,30 @@ class MainWindow(QMainWindow):
                 story.append(t_vend)
             story.append(Spacer(1, 5))
 
+           # --- Datos del Escribano ---
+            nombre_escribano = datos_escribano.get('nombre_completo') or "S/D"
+            matricula_esc = datos_escribano.get('matricula') or "S/D"
+            registro_esc = datos_escribano.get('numero_registro')
+            
+            texto_registro = f" - Registro N° {registro_esc}" if registro_esc else ""
+
             # --- 8 AL 14. OTORGAMIENTO Y OBSERVACIONES ---
             datos_finales = [
                 [Paragraph("<b>8 - MONTO / 10 - OTORGAMIENTO</b>", st_box_title), Paragraph("<b>OBSERVACIONES ADICIONALES</b>", st_box_title)],
-                [Paragraph(f"Precio o Valuación: {texto_monto_pdf}<br/>Fecha de Emisión: {fecha_impresion}<br/>Escribano Autorizante: Registro N° 1", st_box_text), 
+                [Paragraph(f"Precio o Valuación: {texto_monto_pdf}<br/>Fecha de Emisión: {fecha_impresion}<br/>Escribano Autorizante: {nombre_escribano} - Mat. {matricula_esc}{texto_registro}", st_box_text), 
                  Paragraph(observaciones if observaciones else "Sin observaciones.", st_box_text)]
             ]
+            t_final = Table(datos_finales, colWidths=[270, 270])
+            t_final.setStyle(estilo_grilla)
+            story.append(t_final)
+            story.append(Spacer(1, 30))
 
             # --- FIRMAS ---
-            datos_firmas = [["", ""], [Paragraph("__________________________<br/>FIRMA Y SELLO ESCRIBANO", ParagraphStyle('C', alignment=1, fontSize=8)), 
-                                        Paragraph("__________________________<br/>FIRMA Y SELLO DEL REGISTRADOR", ParagraphStyle('C', alignment=1, fontSize=8))]]
+            datos_firmas = [
+                ["", ""], 
+                [Paragraph(f"__________________________<br/><b>{nombre_escribano}</b><br/>Mat. {matricula_esc}<br/>FIRMA Y SELLO ESCRIBANO", ParagraphStyle('C', alignment=1, fontSize=8)), 
+                 Paragraph("__________________________<br/>FIRMA Y SELLO DEL REGISTRADOR", ParagraphStyle('C', alignment=1, fontSize=8))]
+            ]
             t_firmas = Table(datos_firmas, colWidths=[270, 270])
             story.append(t_firmas)
 
@@ -391,6 +508,9 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             print(f"Error al generar el documento PDF oficial: {e}")
+            doc.build(story)
+            print(f"📄 ¡PDF Oficial Minuta C generado con éxito!")
+            os.startfile(os.path.abspath(nombre_archivo))
     # --- TABLA CLIENTES ---
     def guardar_cliente(self):
         nombre = self.txt_nombre.text().strip()
@@ -413,10 +533,10 @@ class MainWindow(QMainWindow):
             cursor = conexion.cursor()
             
             # --- NUEVO: Query actualizada con las nuevas columnas ---
-            query = """
-                INSERT INTO personas (nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge) 
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """
+            query = """INSERT INTO inmuebles 
+           (partida_inmobiliaria, domicilio_inmueble, entre_calles, lote, manzana, superficie, tipo_propiedad, 
+            nom_circunscripcion, nom_seccion, nom_manzana, nom_parcela) 
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             valores = (nombre, apellido, dni, domicilio, estado_civil, conyuge)
             
             cursor.execute(query, valores)
@@ -438,7 +558,10 @@ class MainWindow(QMainWindow):
    # --- TABLA INMUEBLES ---
     def guardar_inmueble(self):
         partida = self.txt_partida.text().strip()
-        nomenclatura = self.txt_nomenclatura.text().strip()
+        n_circ = self.txt_nom_circunscripcion.text().strip()
+        n_sec = self.txt_nom_seccion.text().strip()
+        n_manz = self.txt_nom_manzana.text().strip()
+        n_parc = self.txt_nom_parcela.text().strip()
         domicilio = self.txt_domicilio_inm.text().strip()
         superficie = self.txt_superficie_inm.text().strip()
         depto = self.txt_depto.text().strip()
@@ -447,6 +570,7 @@ class MainWindow(QMainWindow):
         folio_real = self.txt_folio_real.text().strip()
         tomo_numero = self.txt_tomo_numero.text().strip()
         anio = self.txt_anio.text().strip()
+        
         
         # --- NUEVO: Capturar datos de PH ---
         tipo_prop = self.cmb_tipo_propiedad.currentText().strip()
@@ -466,7 +590,6 @@ class MainWindow(QMainWindow):
             return
         
         domicilio = domicilio if domicilio else None
-        nomenclatura = nomenclatura if nomenclatura else None
         superficie = superficie if superficie else None
         depto = depto if depto else None
         localidad = localidad if localidad else None
@@ -474,27 +597,36 @@ class MainWindow(QMainWindow):
         folio_real = folio_real if folio_real else None
         tomo_numero = tomo_numero if tomo_numero else None
         anio = anio if anio else None
+        entre_calles = self.txt_inmueble_entre_calles.text().strip()
+        lote = self.txt_inmueble_lote.text().strip()
+        manzana = self.txt_inmueble_manzana.text().strip()
 
         conexion = None
         try:
             conexion = mysql.connector.connect(host="localhost", user="root", password="admin123", database="proyecto_final_bd")
             cursor = conexion.cursor()
             
-            # --- NUEVO: Query actualizada con las nuevas columnas ---
-            query = """
-                INSERT INTO inmuebles 
-                (partida_inmobiliaria, nomenclatura_catastral, domicilio_inmueble, superficie, departamento, localidad, registro_propiedad, folio_real, tomo_numero, anio_inscripcion, tipo_propiedad, ph_unidad_funcional, ph_poligono, ph_porcentaje) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            valores = (partida, nomenclatura, domicilio, superficie, depto, localidad, registro, folio_real, tomo_numero, anio, tipo_prop, ph_unidad, ph_polig, ph_porcent)
-            cursor.execute(query, valores)
-            conexion.commit()
+            # --- NUEVO: Query actualizada con TODAS las columnas (20 en total) ---
+            query = """INSERT INTO inmuebles 
+                   (partida_inmobiliaria, nom_circunscripcion, nom_seccion, nom_manzana, nom_parcela, 
+                    domicilio_inmueble, entre_calles, lote, manzana, superficie, 
+                    departamento, localidad, registro_propiedad, folio_real, tomo_numero, anio_inscripcion,
+                    tipo_propiedad, ph_unidad_funcional, ph_poligono, ph_porcentaje) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             
+            # Asegurate de que el orden acá sea EXACTAMENTE igual al de arriba
+            valores = (partida, n_circ, n_sec, n_manz, n_parc, 
+                       domicilio, entre_calles, lote, manzana, superficie, 
+                       depto, localidad, registro, folio_real, tomo_numero, anio,
+                       tipo_prop, ph_unidad, ph_polig, ph_porcent)
+            
+            cursor.execute(query, valores)
+            conexion.commit()    
             texto_exito = domicilio if domicilio else f"con Partida {partida}"
             print(f"¡Inmueble ({tipo_prop}) {texto_exito} registrado con éxito!")
             
             # Limpieza general
-            self.txt_partida.clear(); self.txt_nomenclatura.clear(); self.txt_domicilio_inm.clear(); self.txt_superficie_inm.clear()
+            self.txt_partida.clear(); self.txt_domicilio_inm.clear(); self.txt_superficie_inm.clear()
             self.txt_depto.clear(); self.txt_localidad_inm.clear(); self.txt_registro.clear(); self.txt_folio_real.clear()
             self.txt_tomo_numero.clear(); self.txt_anio.clear()
             
@@ -512,6 +644,46 @@ class MainWindow(QMainWindow):
         else:
             self.txt_nombre_conyuge.clear() # Limpiamos por si había escrito algo
             self.txt_nombre_conyuge.setEnabled(False)
+    def filtrar_vendedores(self, texto):
+        """Oculta los vendedores que no coinciden con la búsqueda."""
+        for i in range(self.list_vendedores.count()):
+            item = self.list_vendedores.item(i)
+            # Comparamos todo en minúsculas para que no haya problemas con las mayúsculas
+            if texto.lower() in item.text().lower():
+                item.setHidden(False)
+            else:
+                item.setHidden(True)
+
+    def filtrar_compradores(self, texto):
+        """Oculta los compradores que no coinciden con la búsqueda."""
+        for i in range(self.list_compradores.count()):
+            item = self.list_compradores.item(i)
+            if texto.lower() in item.text().lower():
+                item.setHidden(False)
+            else:
+                item.setHidden(True)
+    def filtrar_inmuebles(self, texto):
+        """Filtra los inmuebles recargando el ComboBox desde un respaldo en memoria."""
+        
+        # 1. Hacemos una copia de seguridad la primera vez que se escribe algo
+        if not hasattr(self, 'respaldo_inmuebles') or len(self.respaldo_inmuebles) == 0:
+            if self.cmb_inmueble.count() > 0:
+                self.respaldo_inmuebles = []
+                for i in range(self.cmb_inmueble.count()):
+                    self.respaldo_inmuebles.append({
+                        "texto": self.cmb_inmueble.itemText(i),
+                        "data": self.cmb_inmueble.itemData(i)
+                    })
+            else:
+                return # Si todavía no cargaron los inmuebles, no hacemos nada
+                
+        # 2. Limpiamos el Desplegable visualmente
+        self.cmb_inmueble.clear()
+        
+        # 3. Lo volvemos a rellenar solo con los que coinciden con el texto
+        for inm in self.respaldo_inmuebles:
+            if texto.lower() in inm["texto"].lower():
+                self.cmb_inmueble.addItem(inm["texto"], inm["data"])
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     user_test = {'usuario': 'facundo_rojo', 'rol': 'Escribano'}
