@@ -651,7 +651,7 @@ class MainWindow(QMainWindow):
             # Comparamos todo en minúsculas para que no haya problemas con las mayúsculas
             if texto.lower() in item.text().lower():
                 item.setHidden(False)
-            else:
+           pip else:
                 item.setHidden(True)
 
     def filtrar_compradores(self, texto):
