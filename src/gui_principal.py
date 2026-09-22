@@ -298,15 +298,16 @@ class MainWindow(QMainWindow):
 
             # Traer los datos completos de los vendedores
             # Traer los datos completos de los vendedores (AGREGAMOS ESTADO CIVIL Y CÓNYUGE)
+            # Traer los datos completos de los vendedores (AGREGAMOS NUPCIAS)
             datos_vendedores = []
             for id_v in vendedores_seleccionados:
-                cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge FROM personas WHERE id_persona = %s", (id_v,))
+                cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias FROM personas WHERE id_persona = %s", (id_v,))
                 datos_vendedores.append(cursor_dict.fetchone())
 
-            # Traer los datos completos de los compradores (AGREGAMOS ESTADO CIVIL Y CÓNYUGE)
+            # Traer los datos completos de los compradores (AGREGAMOS NUPCIAS)
             datos_compradores = []
             for id_c in compradores_seleccionados:
-                cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge FROM personas WHERE id_persona = %s", (id_c,))
+                cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias FROM personas WHERE id_persona = %s", (id_c,))
                 datos_compradores.append(cursor_dict.fetchone())
 
             # --- 3. GENERACIÓN AUTOMÁTICA DEL PDF ---
@@ -337,9 +338,10 @@ class MainWindow(QMainWindow):
                 if 'cursor_dict' in locals():
                     cursor_dict.close()
                 conexion.close()
+    # --- Funcion para generar el pdf ---            
     def generar_pdf_minuta_oficial(self, id_minuta, monto, fecha_impresion, observaciones, inmueble, vendedores, compradores, tipo_acto, datos_escribano):
         """Genera el PDF emulando los casilleros de la Minuta C real de La Rioja"""
-    
+            
         try:
             from reportlab.lib.pagesizes import legal
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -377,6 +379,7 @@ class MainWindow(QMainWindow):
             ])
 
            # --- 1. NOMENCLATURA Y 2. ACTO ---
+            print("DATOS QUE LLEGAN AL PDF:", inmueble)
             n_circ = inmueble.get('nom_circunscripcion') or '-'
             n_sec = inmueble.get('nom_seccion') or '-'
             n_manz = inmueble.get('nom_manzana') or '-'
@@ -447,15 +450,23 @@ class MainWindow(QMainWindow):
             story.append(t3)
             story.append(Spacer(1, 5))
 
-            # --- 6. ADQUIRENTES (COMPRADORES) ---
+# --- 6. ADQUIRENTES (COMPRADORES) ---
             story.append(Paragraph("<b>6 - ADQUIRENTES (Beneficiarios / Compradores)</b>", st_box_title))
             for comp in compradores:
                 dom_c = comp.get('domicilio') or 'S/D'
+                
+                # Armado inteligente del Estado Civil con Nupcias
                 est_civil_c = comp.get('estado_civil') or 'S/D'
+                nupcias_c = comp.get('nupcias')
+                if nupcias_c and nupcias_c != "-":
+                    texto_estado_civil_c = f"{est_civil_c} en {nupcias_c} nupcias"
+                else:
+                    texto_estado_civil_c = est_civil_c
+                    
                 conyuge_c = comp.get('nombre_conyuge')
                 texto_conyuge_c = f" - <b>Cónyuge:</b> {conyuge_c}" if conyuge_c else ""
                 
-                texto_comp = f"<b>Nombre y Apellido:</b> {comp.get('nombre')} {comp.get('apellido')} - <b>DNI:</b> {comp.get('dni')}<br/><b>Estado Civil:</b> {est_civil_c}{texto_conyuge_c}<br/><b>Domicilio:</b> {dom_c}"
+                texto_comp = f"<b>Nombre y Apellido:</b> {comp.get('nombre')} {comp.get('apellido')} - <b>DNI:</b> {comp.get('dni')}<br/><b>Estado Civil:</b> {texto_estado_civil_c}{texto_conyuge_c}<br/><b>Domicilio:</b> {dom_c}"
                 t_comp = Table([[Paragraph(texto_comp, st_box_text)]], colWidths=[540])
                 t_comp.setStyle(estilo_grilla)
                 story.append(t_comp)
@@ -465,11 +476,19 @@ class MainWindow(QMainWindow):
             story.append(Paragraph("<b>7 - TRANSMITENTE (Causante - Cedente / Vendedores)</b>", st_box_title))
             for vend in vendedores:
                 dom_v = vend.get('domicilio') or 'S/D'
+                
+                # Armado inteligente del Estado Civil con Nupcias
                 est_civil_v = vend.get('estado_civil') or 'S/D'
+                nupcias_v = vend.get('nupcias')
+                if nupcias_v and nupcias_v != "-":
+                    texto_estado_civil_v = f"{est_civil_v} en {nupcias_v} nupcias"
+                else:
+                    texto_estado_civil_v = est_civil_v
+                    
                 conyuge_v = vend.get('nombre_conyuge')
                 texto_conyuge_v = f" - <b>Cónyuge:</b> {conyuge_v}" if conyuge_v else ""
                 
-                texto_vend = f"<b>Nombre y Apellido:</b> {vend.get('nombre')} {vend.get('apellido')} - <b>DNI:</b> {vend.get('dni')}<br/><b>Estado Civil:</b> {est_civil_v}{texto_conyuge_v}<br/><b>Domicilio:</b> {dom_v}"
+                texto_vend = f"<b>Nombre y Apellido:</b> {vend.get('nombre')} {vend.get('apellido')} - <b>DNI:</b> {vend.get('dni')}<br/><b>Estado Civil:</b> {texto_estado_civil_v}{texto_conyuge_v}<br/><b>Domicilio:</b> {dom_v}"
                 t_vend = Table([[Paragraph(texto_vend, st_box_text)]], colWidths=[540])
                 t_vend.setStyle(estilo_grilla)
                 story.append(t_vend)
@@ -518,7 +537,12 @@ class MainWindow(QMainWindow):
         dni = self.txt_dni.text().strip()
         domicilio = self.txt_domicilio.text().strip()
         
-        # --- NUEVO: Capturamos el estado civil y el cónyuge ---
+        # --- CAPTURA DE NUPCIAS (con 'c' minúscula en currentText) ---
+        nupcias = self.cmb_nupcias.currentText()
+        if nupcias == "-":
+            nupcias = None
+        
+        # --- Capturamos el estado civil y el cónyuge ---
         estado_civil = self.cmb_estado_civil.currentText().strip()
         # Solo guardamos el cónyuge si el campo está habilitado (es decir, si está casado)
         conyuge = self.txt_nombre_conyuge.text().strip() if self.txt_nombre_conyuge.isEnabled() else None
@@ -532,12 +556,13 @@ class MainWindow(QMainWindow):
             conexion = mysql.connector.connect(host="localhost", user="root", password="admin123", database="proyecto_final_bd")
             cursor = conexion.cursor()
             
-            # --- NUEVO: Query actualizada con las nuevas columnas ---
-            query = """INSERT INTO inmuebles 
-           (partida_inmobiliaria, domicilio_inmueble, entre_calles, lote, manzana, superficie, tipo_propiedad, 
-            nom_circunscripcion, nom_seccion, nom_manzana, nom_parcela) 
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-            valores = (nombre, apellido, dni, domicilio, estado_civil, conyuge)
+            # --- CORRECCIÓN: Query apuntando a la tabla CLIENTES con la columna nupcias ---
+            query = """INSERT INTO personas 
+                       (nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+                       
+            # Sumamos la variable 'nupcias' al final de la tupla
+            valores = (nombre, apellido, dni, domicilio, estado_civil, conyuge, nupcias)
             
             cursor.execute(query, valores)
             conexion.commit()
@@ -548,13 +573,16 @@ class MainWindow(QMainWindow):
             self.txt_apellido.clear()
             self.txt_dni.clear()
             self.txt_domicilio.clear()
+            self.txt_nombre_conyuge.clear()
             self.cmb_estado_civil.setCurrentIndex(0) # Vuelve a Soltero/a
+            self.cmb_nupcias.setCurrentIndex(0) # Vuelve a "-"
             
         except mysql.connector.Error as error:
             print(f"Error al guardar cliente: {error}")
         finally:
             if conexion and conexion.is_connected():
-                cursor.close(); conexion.close()
+                cursor.close()
+                conexion.close()
    # --- TABLA INMUEBLES ---
     def guardar_inmueble(self):
         partida = self.txt_partida.text().strip()
@@ -651,7 +679,7 @@ class MainWindow(QMainWindow):
             # Comparamos todo en minúsculas para que no haya problemas con las mayúsculas
             if texto.lower() in item.text().lower():
                 item.setHidden(False)
-           pip else:
+            else:
                 item.setHidden(True)
 
     def filtrar_compradores(self, texto):
