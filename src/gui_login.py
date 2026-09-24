@@ -68,9 +68,18 @@ class LoginWindow(QMainWindow):
             finally:
                 cursor.close()
                 db.close()
-
 if __name__ == "__main__":
+    import sys
+    import os
+    
     app = QApplication(sys.argv)
+    
+    # Carga automática de estilos QSS
+    ruta_estilos = "estilos.qss"
+    if os.path.exists(ruta_estilos):
+        with open(ruta_estilos, "r") as f:
+            app.setStyleSheet(f.read())
+            
     ventana = LoginWindow()
     ventana.show()
     sys.exit(app.exec())

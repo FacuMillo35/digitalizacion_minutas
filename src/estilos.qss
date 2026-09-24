@@ -1,0 +1,69 @@
+/* --- estilos.qss --- */
+
+/* Fondo general de la ventana */
+QMainWindow {
+    background-color: #F3F4F6;
+}
+
+/* Textos y etiquetas */
+QLabel {
+    font-size: 14px;
+    color: #1F2937;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-weight: bold;
+}
+
+/* Cajas de texto, listas y áreas de texto */
+QLineEdit, QComboBox, QTextEdit, QListWidget {
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    padding: 2px 6px; /* Achicamos el padding arriba y abajo a 2px */
+    min-height: 20px; /* Le damos una altura mínima para que respire el texto */
+    font-size: 13px;
+    color: #1F2937;
+}
+
+/* Efecto cuando hacés clic en una caja de texto (Foco) */
+QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
+    border: 1px solid #1E3A8A; /* Azul Escribanía */
+}
+
+/* Botones principales */
+QPushButton {
+    background-color: #1E3A8A; 
+    color: #FFFFFF;
+    border: none;
+    border-radius: 5px;
+    padding: 3px 16px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* Efecto al pasar el mouse por los botones */
+QPushButton:hover {
+    background-color: #1E40AF;
+}
+
+/* Botones deshabilitados (ej. cuando la especie de derecho no es compraventa) */
+QPushButton:disabled {
+    background-color: #9CA3AF;
+    color: #F3F4F6;
+}
+
+/* Tablas (Grillas) */
+QTableWidget {
+    background-color: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    gridline-color: #E5E7EB;
+}
+
+/* Cabecera de las tablas */
+QHeaderView::section {
+    background-color: #1E3A8A;
+    color: #FFFFFF;
+    padding: 6px;
+    font-weight: bold;
+    border: none;
+}

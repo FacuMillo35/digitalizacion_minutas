@@ -234,7 +234,7 @@ QPushButton:hover {
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btn_cerrar">
+         <widget class="QPushButton" name="btn_cerrar_sesion">
           <property name="minimumSize">
            <size>
             <width>200</width>
@@ -272,9 +272,23 @@ QPushButton:hover {
        <string notr="true">background-color: rgb(114, 190, 250);</string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
-      <widget class="QWidget" name="INICIO"/>
+      <widget class="QWidget" name="INICIO">
+       <widget class="QLabel" name="lbl_logo">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>100</y>
+          <width>571</width>
+          <height>461</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </widget>
       <widget class="QWidget" name="CLIENTES">
        <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
