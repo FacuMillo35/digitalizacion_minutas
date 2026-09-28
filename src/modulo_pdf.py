@@ -8,7 +8,19 @@ def generar_pdf_minuta_oficial(id_minuta, monto, fecha_impresion, observaciones,
     """Genera el PDF emulando los casilleros de la Minuta C real de La Rioja"""
     try:
         os.makedirs("pdf_minutas", exist_ok=True)
-        nombre_archivo = f"pdf_minutas/minuta_c_{id_minuta}.pdf"
+        
+        # --- NUEVO: Nombres dinámicos para el archivo ---
+        # Agarramos el apellido del primer vendedor y del primer comprador (si existen)
+        apellido_vend = vendedores[0].get('apellido', 'Vendedor') if vendedores else 'SD'
+        apellido_comp = compradores[0].get('apellido', 'Comprador') if compradores else 'SD'
+        
+        # Limpiamos los espacios por si tienen apellidos compuestos (ej: "De La Vega" -> "De_La_Vega")
+        apellido_vend = apellido_vend.replace(" ", "_")
+        apellido_comp = apellido_comp.replace(" ", "_")
+        
+        # Armamos el nombre final, ej: "minuta_15_Perez_a_Gomez.pdf"
+        nombre_archivo = f"pdf_minutas/minuta_{id_minuta}_{apellido_vend}_a_{apellido_comp}.pdf"
+        # ------------------------------------------------
 
         doc = SimpleDocTemplate(nombre_archivo, pagesize=legal, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
         story = []
