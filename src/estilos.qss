@@ -67,3 +67,13 @@ QHeaderView::section {
     font-weight: bold;
     border: none;
 }
+/* Fondo claro para todas las ventanas emergentes (Cónyuge, PH, mensajes de error) */
+QDialog {
+    background-color: #F3F4F6; /* Un gris muy clarito, o podés usar #FFFFFF para blanco puro */
+}
+
+/* Nos aseguramos de que el texto adentro de esas ventanas sea oscuro y legible */
+QDialog QLabel {
+    color: #1F2937; 
+    font-size: 13px;
+}

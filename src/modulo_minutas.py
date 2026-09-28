@@ -1,6 +1,7 @@
 import mysql.connector
 from datetime import date
 import modulo_pdf
+
 def guardar_minuta(ventana):
     monto = ventana.txt_monto.text().strip()
     observaciones = ventana.txt_observaciones.toPlainText().strip()
@@ -69,12 +70,14 @@ def guardar_minuta(ventana):
 
         datos_vendedores = []
         for id_v in vendedores_seleccionados:
-            cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias FROM personas WHERE id_persona = %s", (id_v,))
+            # NUEVO: Se agregó dni_conyuge al SELECT
+            cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias, dni_conyuge FROM personas WHERE id_persona = %s", (id_v,))
             datos_vendedores.append(cursor_dict.fetchone())
 
         datos_compradores = []
         for id_c in compradores_seleccionados:
-            cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias FROM personas WHERE id_persona = %s", (id_c,))
+            # NUEVO: Se agregó dni_conyuge al SELECT
+            cursor_dict.execute("SELECT nombre, apellido, dni, domicilio, estado_civil, nombre_conyuge, nupcias, dni_conyuge FROM personas WHERE id_persona = %s", (id_c,))
             datos_compradores.append(cursor_dict.fetchone())
 
         fecha_hoy = date.today().strftime("%d/%m/%Y")
@@ -82,7 +85,7 @@ def guardar_minuta(ventana):
         cursor_dict.execute("SELECT * FROM perfil_escribano WHERE id=1")
         datos_escribano = cursor_dict.fetchone()
 
-        # --- 3. LLAMADA AL PDF (La función sigue estando en la ventana principal por ahora) ---
+        # --- 3. LLAMADA AL PDF ---
         modulo_pdf.generar_pdf_minuta_oficial(
             id_minuta_generada, monto, fecha_hoy, observaciones, 
             datos_inmueble, datos_vendedores, datos_compradores, tipo_acto, datos_escribano

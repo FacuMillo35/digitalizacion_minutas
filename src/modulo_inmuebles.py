@@ -77,7 +77,7 @@ def guardar_inmueble(ventana):
         
         if hasattr(ventana, 'ventana_secundaria_ph'):
             ventana.ventana_secundaria_ph.limpiar_campos()
-        
+        ventana.cargar_combos_minutas()
     except mysql.connector.Error as error: 
         print(f"Error al guardar inmueble: {error}")
     finally:

@@ -6,11 +6,11 @@ from PyQt6.QtCore import QDate
 from PyQt6.QtWidgets import QMainWindow, QApplication, QDialog
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
 import modulo_clientes
 import modulo_inmuebles
 import modulo_minutas
-
-# --- NUEVA CLASE PARA LA VENTANA PH ---
+# --- CLASE PARA LA VENTANA PH ---
 class VentanaPH(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -45,7 +45,52 @@ class VentanaPH(QDialog):
         self.txt_ph_poligono.clear()
         self.txt_ph_porcentaje.clear()
         self.datos_temporales = {"unidad": None, "poligono": None, "porcentaje": None}
+#-- clase para la ventanita de cónyuge --
+class VentanaConyuge(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Datos del Cónyuge")
+        self.setModal(True) 
+        self.setFixedSize(300, 260) # Hicimos la ventana un poquito más alta
+
+        layout = QVBoxLayout()
+
+        self.lbl_nombre = QLabel("Nombre y Apellido del Cónyuge:")
+        self.txt_nombre = QLineEdit()
+
+        # --- NUEVO CAMPO: DNI ---
+        self.lbl_dni = QLabel("DNI del Cónyuge:")
+        self.txt_dni = QLineEdit()
+
+        self.lbl_nupcias = QLabel("Nupcias (Ej: 1ra, 2da):")
+        self.txt_nupcias = QLineEdit()
+
+        self.btn_guardar = QPushButton("Confirmar Datos")
+        self.btn_guardar.setStyleSheet("background-color: #3B82F6; color: white; padding: 5px; border-radius: 4px;")
+        
+        self.btn_guardar.clicked.connect(self.accept)
+
+        layout.addWidget(self.lbl_nombre)
+        layout.addWidget(self.txt_nombre)
+        layout.addWidget(self.lbl_dni)      # Agregamos el label al diseño
+        layout.addWidget(self.txt_dni)      # Agregamos la caja al diseño
+        layout.addWidget(self.lbl_nupcias)
+        layout.addWidget(self.txt_nupcias)
+        layout.addWidget(self.btn_guardar)
+
+        self.setLayout(layout)
+
+    def obtener_datos(self):
+        """Devuelve los 3 datos que el usuario escribió"""
+        return self.txt_nombre.text(), self.txt_nupcias.text(), self.txt_dni.text()
 class MainWindow(QMainWindow):
+    def closeEvent(self, event):
+        """Cierra los diálogos dependientes antes de cerrar la ventana principal."""
+        ventana_ph = getattr(self, "ventana_secundaria_ph", None)
+        if ventana_ph is not None:
+            ventana_ph.close()
+        event.accept()
+
     def guardar_perfil(self):
         nombre = self.txt_perfil_nombre.text().strip()
         matricula = self.txt_perfil_matricula.text().strip()
@@ -233,12 +278,27 @@ class MainWindow(QMainWindow):
             if conexion and conexion.is_connected():
                 cursor.close(); conexion.close()
     # --- NUEVO: Función para prender/apagar el campo del cónyuge ---
-    def alternar_conyuge(self, texto):
-        if "Casado" in texto:
-            self.txt_nombre_conyuge.setEnabled(True)
+    def alternar_conyuge(self, estado):
+        """Abre un popup si es casado y guarda los datos en memoria"""
+        # Agregamos el DNI al diccionario de memoria
+        if not hasattr(self, 'datos_conyuge_temp'):
+            self.datos_conyuge_temp = {"nombre": None, "nupcias": None, "dni": None}
+            
+        es_casado = estado in ["Casado", "Casada", "Casado/a"] 
+        
+        if es_casado:
+            dialogo = VentanaConyuge(self)
+            
+            if dialogo.exec(): 
+                # Ahora recibimos 3 variables
+                nombre, nupcias, dni_conyuge = dialogo.obtener_datos()
+                
+                self.datos_conyuge_temp["nombre"] = nombre
+                self.datos_conyuge_temp["nupcias"] = nupcias
+                self.datos_conyuge_temp["dni"] = dni_conyuge
         else:
-            self.txt_nombre_conyuge.clear() # Limpiamos por si había escrito algo
-            self.txt_nombre_conyuge.setEnabled(False)
+            # Limpiamos la memoria incluyendo el DNI
+            self.datos_conyuge_temp = {"nombre": None, "nupcias": None, "dni": None}
     def filtrar_vendedores(self, texto):
         """Oculta los vendedores que no coinciden con la búsqueda."""
         for i in range(self.list_vendedores.count()):

@@ -125,7 +125,14 @@ def generar_pdf_minuta_oficial(id_minuta, monto, fecha_impresion, observaciones,
                 texto_estado_civil_c = est_civil_c
                 
             conyuge_c = comp.get('nombre_conyuge')
-            texto_conyuge_c = f" - <b>Cónyuge:</b> {conyuge_c}" if conyuge_c else ""
+            dni_conyuge_c = comp.get('dni_conyuge') # Buscamos el DNI
+            
+            if conyuge_c:
+                texto_conyuge_c = f" - <b>Cónyuge:</b> {conyuge_c}"
+                if dni_conyuge_c: # Si cargaron el DNI, lo sumamos
+                    texto_conyuge_c += f" (DNI: {dni_conyuge_c})"
+            else:
+                texto_conyuge_c = ""
             
             texto_comp = f"<b>Nombre y Apellido:</b> {comp.get('nombre')} {comp.get('apellido')} - <b>DNI:</b> {comp.get('dni')}<br/><b>Estado Civil:</b> {texto_estado_civil_c}{texto_conyuge_c}<br/><b>Domicilio:</b> {dom_c}"
             t_comp = Table([[Paragraph(texto_comp, st_box_text)]], colWidths=[540])
@@ -145,7 +152,14 @@ def generar_pdf_minuta_oficial(id_minuta, monto, fecha_impresion, observaciones,
                 texto_estado_civil_v = est_civil_v
                 
             conyuge_v = vend.get('nombre_conyuge')
-            texto_conyuge_v = f" - <b>Cónyuge:</b> {conyuge_v}" if conyuge_v else ""
+            dni_conyuge_v = vend.get('dni_conyuge') # Buscamos el DNI
+            
+            if conyuge_v:
+                texto_conyuge_v = f" - <b>Cónyuge:</b> {conyuge_v}"
+                if dni_conyuge_v: # Si cargaron el DNI, lo sumamos
+                    texto_conyuge_v += f" (DNI: {dni_conyuge_v})"
+            else:
+                texto_conyuge_v = ""
             
             texto_vend = f"<b>Nombre y Apellido:</b> {vend.get('nombre')} {vend.get('apellido')} - <b>DNI:</b> {vend.get('dni')}<br/><b>Estado Civil:</b> {texto_estado_civil_v}{texto_conyuge_v}<br/><b>Domicilio:</b> {dom_v}"
             t_vend = Table([[Paragraph(texto_vend, st_box_text)]], colWidths=[540])
