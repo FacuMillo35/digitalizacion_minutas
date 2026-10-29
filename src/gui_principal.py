@@ -153,19 +153,20 @@ class MainWindow(QMainWindow):
         # El saludo de bienvenida
         if hasattr(self, 'lbl_bienvenida'):
             self.lbl_bienvenida.setText(f"Bienvenido, {self.usuario['usuario']}")
-        # carga de logo de escribania
-        ruta_logo = r"C:\Users\facur\OneDrive\Documentos\AAA UTN\Proyecto Final Digitalizacion Minutas\logo_escribania.jpg"
+            
+        # 1. Usamos ruta relativa. Asegurate de que 'logo_escribania.jpg' 
+        # esté adentro de la carpeta 'src' junto a este archivo de Python.
+        directorio_actual = os.path.dirname(os.path.abspath(__file__))
+        ruta_logo = os.path.join(directorio_actual, "logo_escribania.jpg") 
+        
         if hasattr(self, 'lbl_logo'):
             if os.path.exists(ruta_logo):
                 pixmap = QPixmap(ruta_logo)
-                # Escala la imagen para que encaje perfecto sin deformarse
-                pixmap_escalado = pixmap.scaled(
-                    self.lbl_logo.width(), 
-                    self.lbl_logo.height(), 
-                    Qt.AspectRatioMode.KeepAspectRatio, 
-                    Qt.TransformationMode.SmoothTransformation
-                )
-                self.lbl_logo.setPixmap(pixmap_escalado)
+                self.lbl_logo.setPixmap(pixmap)
+                
+                # 2. Esto delega el escalado al layout de Qt Designer en tiempo real
+                self.lbl_logo.setScaledContents(True)
+                
                 self.lbl_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             else:
                 print("Aviso: No se encontró la imagen del logo.")
